@@ -1,0 +1,5 @@
+venv/
+crossword.pdf
+word_list.txt
+word_list_translations.txt
+main.py
