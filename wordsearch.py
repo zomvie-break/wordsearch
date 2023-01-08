@@ -91,6 +91,7 @@ class Crossword:
         len_word=len(word)
         if loc_y+len_word>self.dimension_y:
             print('word is too big!')
+            return False
         else:
             fake_crossword = copy.deepcopy(self.crossword)
             if backwards:
@@ -105,6 +106,67 @@ class Crossword:
                 else:
                     return False
             self.crossword=fake_crossword
+            return True
+    
+    def place_word_d1(self, word, loc_x, loc_y, backwards=False):
+        """Place a word in the wordsearch diagonally, from left to right"""
+        len_word=len(word)
+        print(f'loy_y + len_word > dimensions y: {loc_y + len_word > self.dimension_y}')
+        print(f'loc_x + len_word > self.dimension_x: {loc_x + len_word > self.dimension_x}')
+        print(f'locx: {loc_x}\tloc_y: {loc_y}\tlen_word: {len_word}\tdim_x: {self.dimension_x}\tdim_y: {self.dimension_y}')
+        if loc_y + len_word > self.dimension_y or loc_x + len_word > self.dimension_x:
+            print('word is too big')
+            return False
+        else:
+            fake_crossword = copy.deepcopy(self.crossword)
+            if backwards:
+                word = word[::-1]
+            temp_loc_y = 0
+            temp_loc_x = 0
+            print(f'adding word {word}')
+            for char in word:
+                if fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value == self.def_value or fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value == char:
+                    fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value = char
+                    temp_loc_x += 1
+                    temp_loc_y += 1
+                    print(f'adding char {char}')
+                else:
+                    print(f'failed to add char {char}')
+                    return False
+            self.crossword = fake_crossword
+            self.print_crossword()
+            return True
+    def place_word_d2(self, word, loc_x, loc_y, backwards=False):
+        """Place a word in the wordsearch diagonally, from right to left"""
+        len_word=len(word)
+        print(f'loy_y + len_word > dimensions y: {loc_y + len_word > self.dimension_y}')
+        print(f'loc_x + len_word > self.dimension_x: {loc_x + len_word > self.dimension_x}')
+        print(f'locx: {loc_x}\tloc_y: {loc_y}\tlen_word: {len_word}\tdim_x: {self.dimension_x}\tdim_y: {self.dimension_y}')
+        if loc_y + len_word > self.dimension_y or loc_x + len_word > self.dimension_x:
+            print('word is too big')
+            return False
+        else:
+            fake_crossword = copy.deepcopy(self.crossword)
+            if backwards:
+                word = word[::-1]
+            temp_loc_y = 0
+            temp_loc_x = loc_x + len_word-1
+            print(f'adding word {word}')
+            for char in word:
+                # try:
+                if fake_crossword[loc_y + temp_loc_y][temp_loc_x].value == self.def_value or fake_crossword[loc_y+temp_loc_y][temp_loc_x].value == char:
+                    fake_crossword[loc_y+temp_loc_y][temp_loc_x].value = char
+                    temp_loc_x -= 1
+                    temp_loc_y += 1
+                    print(f'adding char {char}')
+                else:
+                    print(f'failed to add char {char}')
+                    return False
+                # except:
+                #     print(f'unable to add word: {word}')
+                #     self.print_crossword()
+            self.crossword = fake_crossword
+            self.print_crossword()
             return True
         
     def get_random_loc(self, x=None, y=None):
@@ -128,12 +190,16 @@ class Crossword:
 
 
     def addWords(self, dimensions, file_name, difficulty = 1):
-        with open('/home/victor/python_projects/crosswords/word_list.txt') as f:
+        with open('/home/victor/python_projects/crosswords/word_list_translations.txt') as f:
              lines = f.readlines()
 
         lines = [line.strip() for line in lines]
 
-        words = [re.findall(r'(.*) -', line) for line in lines]
+        words = [re.findall(r'(.*?) - \(.*\)', line) for line in lines]
+        if type(words[0]) is list:
+            words = [x[0] for x in words ]
+        
+        print(words)
 
         # Here is the actual filling of the crossword.
         max_attempts = 1000
@@ -142,14 +208,31 @@ class Crossword:
             flag = False
             for i in range(max_attempts):
                 loc_x, loc_y = self.get_random_loc()
+                rand = np.random.randint(4)
+                if rand == 0:
+                    flag = self.place_word_d2(word, loc_x, loc_y, backwards=False)
+                elif rand == 1:
+                    flag = self.place_word_d1(word, loc_x, loc_y, backwards=False)
+                elif rand == 2:
+                    flag = self.place_word_v(word, loc_x, loc_y, backwards=False)
+                elif rand == 3:
+                    flag = self.place_word_h(word, loc_x, loc_y, backwards=False)
+
+                if flag:
+                    self.print_crossword()
+                    break
+                '''
                 if i%3==0:
                     flag =self.place_word_h(word, loc_x, loc_y,backwards=True)
+                    flag = self.place_word_d1(word, loc_x, loc_y, backwards=True)
+
                 elif i%2==0:
                     flag = self.place_word_v(word, loc_x, loc_y, backwards=True)
                 if flag:
                     self.print_crossword()
                     flag=False
                     break
+                '''
                 if i== max_attempts-1:
                     print(f'failed to add word: {word}')
                     failed_words.append(word)
@@ -201,12 +284,6 @@ class PDFHelper:
 
 
 if __name__ == "__main__":
-    with open('/home/victor/python_projects/crosswords/word_list.txt') as f:
-        lines = f.readlines()
-    lines = [line.strip() for line in lines]
-
-    words = [re.findall(r'(.*) -', line) for line in lines]
-
     # set dimensions of the crossword
     cw = Crossword(20, 30)
     print('empty crossword')
