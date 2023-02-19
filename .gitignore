@@ -1,5 +1,5 @@
 venv/
-crossword.pdf
-word_list.txt
-word_list_translations.txt
+*.txt
 main.py
+*.pdf
+platypus_test*

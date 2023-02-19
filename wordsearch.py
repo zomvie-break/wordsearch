@@ -77,7 +77,7 @@ class Crossword:
             temp_loc_x=0
             for char in word:
                 if fake_crossword[loc_y][loc_x+temp_loc_x].value == self.def_value or fake_crossword[loc_y][loc_x+temp_loc_x].value == char:
-                    fake_crossword[loc_y][loc_x+temp_loc_x].value = char
+                    fake_crossword[loc_y][loc_x+temp_loc_x].value = char.upper()
                     temp_loc_x += 1
                 else:
                     return False
@@ -101,7 +101,7 @@ class Crossword:
                 # tile = self.crossword[loc_y][loc_x+temp_loc_x]
                 # print(f'tile: {tile}\tdefvalue: {self.def_value}')
                 if fake_crossword[loc_y+temp_loc_y][loc_x].value == self.def_value or  fake_crossword[loc_y+temp_loc_y][loc_x].value == char:
-                    fake_crossword[loc_y+temp_loc_y][loc_x].value = char
+                    fake_crossword[loc_y+temp_loc_y][loc_x].value = char.upper()
                     temp_loc_y += 1
                 else:
                     return False
@@ -126,7 +126,7 @@ class Crossword:
             print(f'adding word {word}')
             for char in word:
                 if fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value == self.def_value or fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value == char:
-                    fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value = char
+                    fake_crossword[loc_y+temp_loc_y][loc_x+temp_loc_x].value = char.upper()
                     temp_loc_x += 1
                     temp_loc_y += 1
                     print(f'adding char {char}')
@@ -136,6 +136,7 @@ class Crossword:
             self.crossword = fake_crossword
             self.print_crossword()
             return True
+    
     def place_word_d2(self, word, loc_x, loc_y, backwards=False):
         """Place a word in the wordsearch diagonally, from right to left"""
         len_word=len(word)
@@ -155,7 +156,7 @@ class Crossword:
             for char in word:
                 # try:
                 if fake_crossword[loc_y + temp_loc_y][temp_loc_x].value == self.def_value or fake_crossword[loc_y+temp_loc_y][temp_loc_x].value == char:
-                    fake_crossword[loc_y+temp_loc_y][temp_loc_x].value = char
+                    fake_crossword[loc_y+temp_loc_y][temp_loc_x].value = char.upper()
                     temp_loc_x -= 1
                     temp_loc_y += 1
                     print(f'adding char {char}')
@@ -186,15 +187,14 @@ class Crossword:
         for i in range(len(self.crossword)):
             for j in range(len(self.crossword[i])):
                 if self.crossword[i][j].value == self.def_value:
-                    self.crossword[i][j].value = np.random.choice([x for x in ascii_lowercase])
+                    self.crossword[i][j].value = np.random.choice([x.upper() for x in ascii_lowercase])
 
-
-    def addWords(self, dimensions, file_name, difficulty = 1):
+    def addWords(self, file_name, difficulty = 1):
         with open('/home/victor/python_projects/crosswords/word_list_translations.txt') as f:
              lines = f.readlines()
 
         lines = [line.strip() for line in lines]
-
+        # depending on the file, it will try to extract the first word befor the '-' char 
         words = [re.findall(r'(.*?) - \(.*\)', line) for line in lines]
         if type(words[0]) is list:
             words = [x[0] for x in words ]
@@ -202,6 +202,7 @@ class Crossword:
         print(words)
 
         # Here is the actual filling of the crossword.
+        """
         max_attempts = 1000
         failed_words = []
         for word in words:
@@ -221,21 +222,99 @@ class Crossword:
                 if flag:
                     self.print_crossword()
                     break
-                '''
-                if i%3==0:
-                    flag =self.place_word_h(word, loc_x, loc_y,backwards=True)
-                    flag = self.place_word_d1(word, loc_x, loc_y, backwards=True)
 
-                elif i%2==0:
-                    flag = self.place_word_v(word, loc_x, loc_y, backwards=True)
-                if flag:
-                    self.print_crossword()
-                    flag=False
-                    break
-                '''
                 if i== max_attempts-1:
                     print(f'failed to add word: {word}')
                     failed_words.append(word)
+        print(f'words attepted: {len(words)}\twords failed: {len(failed_words)}')
+        print(failed_words)
+        self.fill_empty_places()
+        self.print_crossword()
+        """
+
+        max_attempts = 1000
+        failed_words = []
+        for word in words:
+            for i in range(max_attempts):
+                # flag is used to check if the word was succesfully placed in the wordsearch
+                flag = False
+                # difficulty of 1, i.e. easy.
+                if difficulty == 1:
+                    direction = np.random.randint(2)
+                    loc_x, loc_y = self.get_random_loc()
+                    if direction == 0:
+                        # horizontal 
+                        flag=self.place_word_h(word, loc_x, loc_y)
+                    if direction == 1:
+                        # vertical
+                        flag = self.place_word_v(word, loc_x, loc_y)
+                    if flag:
+                        self.print_crossword()
+                        break
+            
+                # difficulty of 2, i.e. medium
+                if difficulty == 2:
+                    direction = np.random.randint(3)
+                    loc_x, loc_y = self.get_random_loc()
+                    if direction == 0:
+                        # horizontal 
+                        flag=self.place_word_h(word, loc_x, loc_y)
+                    if direction == 1:
+                        # vertical
+                        flag = self.place_word_v(word, loc_x, loc_y)
+                    if direction == 2:
+                        # diagonal 1
+                        flag = self.place_word_d1(word, loc_x, loc_y)
+                    if flag:
+                        self.print_crossword()
+                        break
+
+                # difficulty of 3, i.e. hard
+                if difficulty == 3:
+                    direction = np.random.randint(4)
+                    loc_x, loc_y = self.get_random_loc()
+                    if direction == 0:
+                        # horizontal 
+                        flag=self.place_word_h(word, loc_x, loc_y)
+                    if direction == 1:
+                        # vertical
+                        flag = self.place_word_v(word, loc_x, loc_y)
+                    if direction == 2:
+                        # diagonal 1
+                        flag = self.place_word_d1(word, loc_x, loc_y)
+                    if direction == 3:
+                        # diagonal 2
+                        flag = self.place_word_d2(word, loc_x, loc_y)
+                    if flag:
+                        self.print_crossword()
+                        break
+
+                # difficulty of 4, i.e. very hard
+                if difficulty == 4:
+                    direction = np.random.randint(4)
+                    loc_x, loc_y = self.get_random_loc()
+                    backwards = np.random.choice([True, False])
+                    if direction == 0:
+                        # horizontal 
+                        flag=self.place_word_h(word, loc_x, loc_y, backwards=backwards)
+                    if direction == 1:
+                        # vertical
+                        flag = self.place_word_v(word, loc_x, loc_y, backwards=backwards)
+                    if direction == 2:
+                        # diagonal 1
+                        flag = self.place_word_d1(word, loc_x, loc_y, backwards=backwards)
+                    if direction == 3:
+                        # diagonal 2
+                        flag = self.place_word_d2(word, loc_x, loc_y, backwards=backwards)
+                    if flag:
+                        self.print_crossword()
+                        break
+                
+
+
+                if i== max_attempts-1:
+                            print(f'failed to add word: {word}')
+                            failed_words.append(word)
         print(f'words attepted: {len(words)}\twords failed: {len(failed_words)}')
         print(failed_words)
         self.fill_empty_places()
@@ -245,9 +324,9 @@ class PDFHelper:
     def __init__(self):
         pass
 
-    def create_crossword(self, crossword, filename='crossword.pdf', title = ''):
+    def create_crossword(self, crossword, filename='word_search.pdf', title = ''):
         """
-        Takes a crossword (an instance of the crossword class) and a file name (crossword.pdf as default)
+        Takes a crossword (an instance of the crossword class) and a file name (word_search.pdf as default)
         """
         # initialize the SimpleDocTemplate with som standard values
         doc = SimpleDocTemplate(filename,
@@ -282,7 +361,6 @@ class PDFHelper:
         elements.append(t1)
         doc.build(elements)
 
-
 if __name__ == "__main__":
     # set dimensions of the crossword
     cw = Crossword(20, 30)
@@ -291,9 +369,8 @@ if __name__ == "__main__":
 
 
     file_name = '/home/victor/python_projects/crosswords/word_list.txt'
-    dimensions = [20,30]
 
-    cw.addWords(dimensions, file_name)
+    cw.addWords( file_name, difficulty=4)
 
     pdf_helper = PDFHelper()
     pdf_helper.create_crossword(cw, title='My crossword')
