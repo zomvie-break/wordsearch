@@ -5,7 +5,7 @@ from string import ascii_lowercase      #for getting random ascii characters to 
 
 # reportlab imports for working with PDFs
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from reportlab.lib.units import inch
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER
@@ -202,36 +202,6 @@ class Crossword:
         print(words)
 
         # Here is the actual filling of the crossword.
-        """
-        max_attempts = 1000
-        failed_words = []
-        for word in words:
-            flag = False
-            for i in range(max_attempts):
-                loc_x, loc_y = self.get_random_loc()
-                rand = np.random.randint(4)
-                if rand == 0:
-                    flag = self.place_word_d2(word, loc_x, loc_y, backwards=False)
-                elif rand == 1:
-                    flag = self.place_word_d1(word, loc_x, loc_y, backwards=False)
-                elif rand == 2:
-                    flag = self.place_word_v(word, loc_x, loc_y, backwards=False)
-                elif rand == 3:
-                    flag = self.place_word_h(word, loc_x, loc_y, backwards=False)
-
-                if flag:
-                    self.print_crossword()
-                    break
-
-                if i== max_attempts-1:
-                    print(f'failed to add word: {word}')
-                    failed_words.append(word)
-        print(f'words attepted: {len(words)}\twords failed: {len(failed_words)}')
-        print(failed_words)
-        self.fill_empty_places()
-        self.print_crossword()
-        """
-
         max_attempts = 1000
         failed_words = []
         for word in words:
@@ -324,7 +294,59 @@ class PDFHelper:
     def __init__(self):
         pass
 
-    def create_crossword(self, crossword, filename='word_search.pdf', title = ''):
+    def get_word_box(self, txt_file):
+        """
+        returns a reportlab flowable element which contain all the words in the txt file
+        """
+        with open(txt_file, 'r') as f:
+            txt = f.readlines()
+        txt = ' '.join(txt).replace('\n','<br />')
+        # print(txt)
+        flow_element = Paragraph(txt)
+        return flow_element
+    
+    def txt2table(self, txt_file):
+        # open the text file.
+        with open(txt_file, 'r') as f:
+            txt = f.readlines()
+        # desired number of rows
+        drows = 4
+        # get the number of words
+        num = len(txt)
+        # get the number of cells necessary for the table
+        if num%drows==0:
+            pass
+        else:
+            num = (num//drows+1)*drows
+        # make a list of list of dimensiosn of 2 x N
+        temp = []
+        lst_of_lsts = []
+        for i in range(num+1):
+            # if i > len(txt):
+            #     temp.append('')
+            if i %drows == 0 and i!=0:
+                lst_of_lsts.append(temp)
+                temp = []
+            try:
+                temp.append(txt[i].strip())
+            except IndexError:
+                temp.append('')
+
+
+        print(lst_of_lsts)
+        table = Table(
+                        # [[Paragraph(col) for col in df.columns]] + df.values.tolist(), 
+                        lst_of_lsts,
+                        style=[
+                            # ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+                            # ('LINEBELOW',(0,0), (-1,0), 1, colors.black),
+                            # ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+                            ('BOX', (0,0), (-1,-1), 1, colors.grey),
+                            ('ROWBACKGROUNDS', (0,0), (-1,-1), [colors.lightgrey, colors.white])])
+                        # hAlign = 'LEFT')
+        return table
+
+    def create_crossword(self, crossword, txt_file, filename='word_search.pdf', title = ''):
         """
         Takes a crossword (an instance of the crossword class) and a file name (word_search.pdf as default)
         """
@@ -347,30 +369,46 @@ class PDFHelper:
 
         # style templates from reportlab
         styles = getSampleStyleSheet()
+        titleStyle = ParagraphStyle('title_ws',
+                           fontName="Helvetica-Bold",
+                           fontSize=20,
+                           parent=styles['Heading1'],
+                           alignment=1,
+                           spaceAfter=20)
         # styles.add(ParagraphStyle(name='centered', alignment=TA_CENTER))
-        t0 = Paragraph('My User Names\n\n', styles['Heading1'])
+        t0 = Paragraph(title, titleStyle)
+        
         # print(f'col={crossword.dimension_x}\trow={crossword.dimension_y}\ttype={type(crossword.dimension_x)}')
 
         # the colWidths and rowHeights are difined as the space beteween cells, and take an array such as [0.2*inch, 0.2*inch ...]
-        t1 = Table(tab, colWidths=[0.2*inch]*crossword.dimension_x, rowHeights=[0.2*inch]*crossword.dimension_y) # dimensions required
-        t1.setStyle(TableStyle([('BOX', (0,0), (-1,-1), 2, colors.black)]))
+        t1 = Table(tab, colWidths=[0.3*inch]*crossword.dimension_x, rowHeights=[0.3*inch]*crossword.dimension_y) # dimensions required
+        t1.setStyle(TableStyle([('BOX', (0,0), (-1,-1), 2, colors.black), 
+                                ('FONT', (0,0),(-1,-1),'Helvetica', 12),
+                                ('ALIGN', (0, 0), (-1, -1), "CENTER")]))
+
+        word_box = self.txt2table(txt_file)
 
         # list to save the elements to be attached in the PDF
         elements = []
         elements.append(t0)
         elements.append(t1)
+        # frame1 = Frame(doc.leftMargin, doc.bottomMargin, doc.width/2-6, doc.height, id='col1')
+        # frame2 = Frame(doc.leftMargin+doc.width/2+6, doc.bottomMargin, doc.width/2-6, doc.height, id='col2',showBoundary=1)
+        # f = Frame(inch, inch, 6*inch, 9*inch, showBoundary=1)
+        # frame1.addFromList(elements,doc)
+        elements.append(word_box)
         doc.build(elements)
 
+
 if __name__ == "__main__":
-    # set dimensions of the crossword
-    cw = Crossword(20, 30)
-    print('empty crossword')
+    # set dimensions of the crossword (max reasonable dimensions 22, 32 for a whole page)
+    cw = Crossword(22, 30)
+    # print('empty crossword')
     cw.print_crossword()
+    txt_file = '/home/victor/python_projects/crosswords/word_list_translations.txt'
 
-
-    file_name = '/home/victor/python_projects/crosswords/word_list.txt'
-
-    cw.addWords( file_name, difficulty=4)
+    cw.addWords( txt_file, difficulty=4)
 
     pdf_helper = PDFHelper()
-    pdf_helper.create_crossword(cw, title='My crossword')
+    pdf_helper.create_crossword(cw, txt_file, title='WordSearch' )
+    
