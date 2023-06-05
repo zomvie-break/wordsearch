@@ -2,4 +2,5 @@ venv/
 *.txt
 main.py
 *.pdf
-platypus_test*
+tests/
+__pycache__/
