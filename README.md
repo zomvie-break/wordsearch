@@ -20,6 +20,7 @@ Clone the repo:
 
 Then activate the virtual environment and install the requirements:
 `source ./<name_of_venv>/bin/activate`
+
 `pip install -r requirements.txt`
 
 ## How to run the script?
@@ -28,7 +29,7 @@ To run the script, change the first line of `main.py` to your python interpreter
 
 You might also need to change the access permissions of the file with `chmod +x ./main.py`. 
 
-Change the path of the text file in the `main.py` and choos how many wordsearches you want to generate and of what difficulty.
+Change the path of the text file in the `main.py` and choose how many wordsearches you want to generate and of what difficulty.
 
 ## Sample
 
