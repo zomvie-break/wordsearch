@@ -1,0 +1,14 @@
+perro - (m) - dog
+gato - (m) - cat
+elefante - (m) - elephant
+mariposa - (f) - butteryfly
+hormiga - (f) - ant
+mosquito - (m) - mosquito
+zorro - (m) - fox
+oso - (m) - bear
+caballo - (m) - horse
+rinoceronte - (m) - rhino
+dinosaurio - (m) - dinosaur
+vaca - (f) - cow
+aguila - (m) - eagle
+gaviota - (f) - seagull
