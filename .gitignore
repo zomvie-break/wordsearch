@@ -5,3 +5,4 @@ main.py
 tests/
 __pycache__/
 !sample_text_00.txt
+!requirements.txt
